@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Forca do Amor</title>
+    <style>
+        body {
+            background-color: salmon;
+            color: black;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        input {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        #word-display {
+            font-size: 24px;
+            letter-spacing: 10px;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .hangman {
+            margin-top: 20px;
+        }
+
+        .celebration {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .balloon, .heart {
+            width: 50px;
+            height: 70px;
+            position: absolute;
+            animation: float 5s ease-in-out infinite;
+        }
+
+        .balloon {
+            background-color: red;
+            border-radius: 50%;
+        }
+
+        .heart {
+            font-size: 50px;
+            line-height: 70px;
+            text-align: center;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-300px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jogo da Forca do Amor</h1>
+        <div id="game">
+            <p id="word-display"></p>
+            <p>Tentativas erradas: <span id="wrong-attempts">0</span> / 6</p>
+            <input type="text" id="letter-input" maxlength="1">
+        </div>
+        <div class="hangman" id="hangman">
+            <pre>
++---+
+|   |
+|    
+|    
+|    
+|    
++---+
+            </pre>
+        </div>
+        <p id="message"></p>
+        <div class="celebration" id="celebration"></div>
+    </div>
+
+    <script>
+        let word = "N a m o r a  C o m i g o".toLowerCase();
+        let guessedLetters = [];
+        let wrongAttempts = 0;
+        const maxAttempts = 6;
+        const stickParts = [
+            `
++---+
+|   |
+|    
+|    
+|    
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|    
+|    
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|   |
+|    
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|  /|
+|    
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|  /|\\
+|    
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|  /|\\
+|  / 
+|    
++---+
+            `,
+            `
++---+
+|   |
+|   O
+|  /|\\
+|  / \\
+|    
++---+
+            `
+        ];
+
+        document.addEventListener("DOMContentLoaded", function() {
+            updateWordDisplay();
+
+            document.getElementById('letter-input').addEventListener('keyup', function(event) {
+                if (event.key === 'Enter') {
+                    let letter = event.target.value.toLowerCase();
+                    event.target.value = '';
+                    if (isValidLetter(letter)) {
+                        guess(letter);
+                    }
+                }
+            });
+        });
+
+        function isValidLetter(letter) {
+            return /^[a-zA-Z]$/.test(letter);
+        }
+
+        function guess(letter) {
+            if (letter && !guessedLetters.includes(letter)) {
+                guessedLetters.push(letter);
+                if (!word.includes(letter)) {
+                    wrongAttempts++;
+                }
+                updateWordDisplay();
+                document.getElementById('wrong-attempts').textContent = wrongAttempts;
+                document.getElementById('hangman').innerHTML = '<pre>' + stickParts[wrongAttempts] + '</pre>';
+                
+                if (wrongAttempts >= maxAttempts || isWordComplete()) {
+                    endGame();
+                }
+            }
+        }
+
+        function updateWordDisplay() {
+            let display = word.split('').map(letter => (guessedLetters.includes(letter) || letter === ' ' ? letter : '_')).join(' ');
+            document.getElementById('word-display').textContent = display + " ?";
+        }
+
+        function isWordComplete() {
+            return word.split('').every(letter => guessedLetters.includes(letter) || letter === ' ');
+        }
+
+        function endGame() {
+            let message = wrongAttempts >= maxAttempts ? 'Tenho a vida toda!' : 'Parabéns! Você adivinhou!';
+            document.getElementById('message').textContent = message;
+            document.getElementById('letter-input').disabled = true;
+            if (wrongAttempts >= maxAttempts) {
+                document.getElementById('word-display').textContent = word;
+            } else {
+                displayCelebration();
+            }
+        }
+
+        function displayCelebration() {
+            const celebrationContainer = document.getElementById('celebration');
+            celebrationContainer.style.display = 'block';
+
+            for (let i = 0; i < 50; i++) {
+               // const balloon = document.createElement('div');
+               // balloon.className = 'balloon';
+               // balloon.style.left = `${Math.random() * 100}%`;
+               // balloon.style.top = `${Math.random() * 100}%`;
+               // balloon.style.animationDelay = `${Math.random() * 5}s`;
+               // celebrationContainer.appendChild(balloon);
+
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '❤️';
+                heart.style.left = `${Math.random() * 100}%`;
+                heart.style.top = `${Math.random() * 100}%`;
+                heart.style.animationDelay = `${Math.random() * 5}s`;
+                celebrationContainer.appendChild(heart);
+                
+                 setTimeout(() => {
+                heart.remove();
+            }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
